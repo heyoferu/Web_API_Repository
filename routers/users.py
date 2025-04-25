@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlmodel import select
 from db import get_session, Session
-from models import UserUpdate, Users
+from models.users import UserInfo, Users
 import bcrypt
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -21,7 +21,7 @@ async def create_user(new_user: Users, session: Session = Depends(get_session)):
         session.close()
 
 @router.post("")
-async def update_user(user_new_data: UserUpdate, session: Session = Depends(get_session)):
+async def update_user(user_new_data: UserInfo, session: Session = Depends(get_session)):
     try:
         statement = select(Users).where(Users.id == user_new_data.id)
         user_to_update = session.exec(statement).one()

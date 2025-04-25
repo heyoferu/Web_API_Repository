@@ -1,12 +1,14 @@
 from datetime import timedelta
 import bcrypt
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import select
 from db import get_session, Session
-from models import UserCredentials, UserNewCredentials, Users
-from dependencies import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
+from models.users import UserCredentials, UserNewCredentials, Users,  UserInfo
+from dependencies import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, decode_access_token
 
 
+scheme = HTTPBearer()
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -17,7 +19,6 @@ async def login(credentials_to_login: UserCredentials, session: Session = Depend
 
     if bcrypt.checkpw(credentials_to_login.password.encode(), user_from_query.password.encode()):
         
-        # token gen
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
             data={"sub": credentials_to_login.email}, expires_delta=access_token_expires
@@ -25,7 +26,7 @@ async def login(credentials_to_login: UserCredentials, session: Session = Depend
         return {"access_token": access_token, "token_type": "bearer"}
     
     else:
-        return False
+        raise HTTPException(status_code=404)
 
 @router.post("/recovery")
 async def recovery(credentials_update: UserNewCredentials, session: Session = Depends(get_session)):
@@ -49,3 +50,20 @@ async def recovery(credentials_update: UserNewCredentials, session: Session = De
             return False
     else:
         False
+
+@router.get('/me')
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(scheme), session: Session = Depends(get_session)):
+    decoded_sub = decode_access_token(credentials.credentials)
+    try:
+        statement = select(Users.id, Users.email, Users.name, Users.lname).where(Users.email == decoded_sub)
+        result = session.exec(statement).one()
+        id, email, name, lname = result
+        if result:
+            return UserInfo(id=id,email=email,name=name,lname=lname)
+        else:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    except Exception as e:
+        session.rollback()
+        return None
+
