@@ -17,9 +17,6 @@ async def get_videos(filters: Annotated[VideosFilterParams, Query()], session: S
     else:
         statement = select(Videos)
 
-    if filters.isbn:
-        statement.where(Videos.isbn == filters.isbn)
-    # if filters.tags:
     #     statement.where(Videos.tags in filters.tags)
     
 

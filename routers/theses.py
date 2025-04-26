@@ -16,9 +16,7 @@ async def get_theses(filters: Annotated[ThesesFilterParams, Query()], session: S
         statement = select(Theses).limit(filters.limit)
     else:
         statement = select(Theses)
-
-    if filters.isbn:
-        statement.where(Theses.isbn == filters.isbn)
+        
     # if filters.tags:
     #     statement.where(Theses.tags in filters.tags)
     

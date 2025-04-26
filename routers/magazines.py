@@ -17,8 +17,8 @@ async def get_magazines(filters: Annotated[MagazinesFilterParams, Query()], sess
     else:
         statement = select(Magazines)
 
-    if filters.isbn:
-        statement.where(Magazines.isbn == filters.isbn)
+    if filters.issn:
+        statement.where(Magazines.issn == filters.issn)
     # if filters.tags:
     #     statement.where(Magazines.tags in filters.tags)
     

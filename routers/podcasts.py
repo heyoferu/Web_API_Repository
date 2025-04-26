@@ -17,8 +17,6 @@ async def get_podcasts(filters: Annotated[PodcastsFilterParams, Query()], sessio
     else:
         statement = select(Podcasts)
 
-    if filters.isbn:
-        statement.where(Podcasts.isbn == filters.isbn)
     # if filters.tags:
     #     statement.where(Podcasts.tags in filters.tags)
     
